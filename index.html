@@ -70,8 +70,20 @@ h2,h3,p{margin:0}
 .brand{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap}
 .brand h1{margin:0;font:700 28px/1 var(--f-display);letter-spacing:.03em;text-transform:uppercase}
 .brand span{color:var(--muted);font-size:13px}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-.tab{min-height:44px;border:1px solid var(--line);background:var(--surface);border-radius:8px;font-weight:600;font-size:15px;cursor:pointer}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:10px}
+.tab{min-width:0;min-height:44px;padding:0 2px;border:1px solid var(--line);background:var(--surface);border-radius:8px;font-weight:600;font-size:13px;white-space:nowrap;cursor:pointer}
+@media (max-width:400px){.tab{font-size:12px;letter-spacing:-.01em}}
+/* Gasometria */
+.agrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.agrid h3{grid-column:1/-1;margin:6px 0 0}
+.agrid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);min-width:0}
+.agrid input{width:100%;min-height:44px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink);font-family:var(--f-mono);font-size:16px}
+.reshead{font:700 24px/1.2 var(--f-display);letter-spacing:.02em;text-transform:uppercase;text-wrap:balance}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip.n{background:var(--raised);color:var(--ink)}
+.warnbox{border:2px solid var(--warn);background:var(--warn-bg);border-radius:10px;padding:12px 14px;font-weight:500}
+.cond h3{margin-bottom:6px;color:var(--ink)}
+.cond ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:7px;font-size:15px}
 .tab[aria-selected="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 main{display:flex;flex-direction:column;padding-top:14px}
 .panel{display:flex;flex-direction:column;gap:12px}
@@ -100,6 +112,7 @@ main{display:flex;flex-direction:column;padding-top:14px}
 .cycle{text-align:center}
 .cycle .lbl{font:600 12px/1 var(--f-body);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .cycle .val{font:600 64px/1.1 var(--f-mono);font-variant-numeric:tabular-nums;margin-block:6px 10px}
+.cycle .val.over{color:var(--shock)}
 .prog{height:8px;border-radius:4px;background:var(--raised);overflow:hidden}
 .prog i{display:block;height:100%;width:0;background:var(--accent)}
 .prog i.end{background:var(--warn)}
@@ -172,6 +185,13 @@ details.card[open]>summary{margin-bottom:10px}
 .score{font:600 44px/1.1 var(--f-mono);margin-block:6px}
 .foot{font-size:12.5px;color:var(--muted);padding:18px 2px 0}
 a{color:var(--accent)}
+.help{margin-left:auto;min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:8px;background:var(--surface);font-weight:600;font-size:14px;cursor:pointer}
+.steps{margin:10px 0 0;padding-left:22px;display:flex;flex-direction:column;gap:8px}
+.steps li::marker{font-weight:600;color:var(--muted)}
+.chip{display:inline-block;padding:1px 8px;border-radius:5px;font-size:13px;font-weight:600;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.due{background:var(--warn-bg);color:var(--warn)}
+.chip.late{background:var(--shock-bg);color:var(--shock)}
 @media (prefers-reduced-motion:no-preference){.prog i{transition:width .25s linear}}
 @media (max-width:380px){.cycle .val{font-size:56px}.tile .val{font-size:26px}}
 </style>
@@ -180,9 +200,10 @@ a{color:var(--accent)}
 
 <div class="app">
 <header class="bar">
-  <div class="brand"><h1>Guia PCR</h1><span>SAV adulto · base AHA 2025</span></div>
+  <div class="brand"><h1>Guia PCR</h1><span>SAV adulto · base AHA 2025</span><button class="help" data-act="help">Como usar</button></div>
   <nav class="tabs" role="tablist" aria-label="Modos">
     <button class="tab" role="tab" id="tabbtn-atend" data-tab="atend" aria-selected="true">Atendimento</button>
+    <button class="tab" role="tab" id="tabbtn-gas" data-tab="gas" aria-selected="false">Gasometria</button>
     <button class="tab" role="tab" id="tabbtn-treino" data-tab="treino" aria-selected="false">Treino</button>
     <button class="tab" role="tab" id="tabbtn-ref" data-tab="ref" aria-selected="false">Referência</button>
   </nav>
@@ -193,6 +214,11 @@ a{color:var(--accent)}
 <section id="tab-atend" class="panel" role="tabpanel" aria-labelledby="tabbtn-atend">
 
   <div id="idle" class="panel">
+    <div class="card" id="helpBanner" hidden>
+      <h3>Primeira vez aqui?</h3>
+      <p>Veja como usar o app em cerca de 1 minuto.</p>
+      <div class="row" style="margin-top:12px"><button class="btn primary" data-act="help">Ver como usar</button><button class="btn ghost" data-act="help-dismiss">Dispensar</button></div>
+    </div>
     <div class="card">
       <span class="badge">Protótipo em validação</span>
       <h2 style="margin-top:10px">Pronto para iniciar</h2>
@@ -270,6 +296,35 @@ a{color:var(--accent)}
   </div>
 </section>
 
+<!-- ===================== GASOMETRIA ===================== -->
+<section id="tab-gas" class="panel" role="tabpanel" aria-labelledby="tabbtn-gas" hidden>
+  <div class="card">
+    <h2>Gasometria arterial</h2>
+    <p class="muted small" style="margin-top:6px">Digite os valores e a interpretação aparece na hora. Nada é salvo: os valores ficam só na tela.</p>
+    <div class="agrid" id="abgForm" style="margin-top:12px">
+      <h3>Obrigatórios</h3>
+      <label for="g-ph">pH<input id="g-ph" type="text" inputmode="decimal" autocomplete="off" placeholder="7,40"></label>
+      <label for="g-pco2">PaCO₂ (mmHg)<input id="g-pco2" type="text" inputmode="decimal" autocomplete="off" placeholder="40"></label>
+      <label for="g-hco3">HCO₃⁻ (mEq/L)<input id="g-hco3" type="text" inputmode="decimal" autocomplete="off" placeholder="24"></label>
+      <h3>Ânion gap e lactato (opcional)</h3>
+      <label for="g-na">Na⁺ (mEq/L)<input id="g-na" type="text" inputmode="decimal" autocomplete="off" placeholder="140"></label>
+      <label for="g-cl">Cl⁻ (mEq/L)<input id="g-cl" type="text" inputmode="decimal" autocomplete="off" placeholder="104"></label>
+      <label for="g-alb">Albumina (g/dL)<input id="g-alb" type="text" inputmode="decimal" autocomplete="off" placeholder="4,0"></label>
+      <label for="g-lac">Lactato (mmol/L)<input id="g-lac" type="text" inputmode="decimal" autocomplete="off" placeholder="1,0"></label>
+      <h3>Oxigenação (opcional)</h3>
+      <label for="g-po2">PaO₂ (mmHg)<input id="g-po2" type="text" inputmode="decimal" autocomplete="off" placeholder="90"></label>
+      <label for="g-fio2">FiO₂ (%)<input id="g-fio2" type="text" inputmode="decimal" autocomplete="off" placeholder="21"></label>
+      <label for="g-idade">Idade (anos)<input id="g-idade" type="text" inputmode="decimal" autocomplete="off" placeholder="50"></label>
+      <label for="g-peso">Peso (kg), para o bicarbonato<input id="g-peso" type="text" inputmode="decimal" autocomplete="off" placeholder="70"></label>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn ghost" data-act="abg-example">Carregar exemplo</button>
+      <button class="btn ghost" data-act="abg-clear">Limpar</button>
+    </div>
+  </div>
+  <div id="abgOut" class="panel" aria-live="polite"></div>
+</section>
+
 <!-- ===================== TREINO ===================== -->
 <section id="tab-treino" class="panel" role="tabpanel" aria-labelledby="tabbtn-treino" hidden>
   <div id="trainRoot" class="panel"></div>
@@ -313,6 +368,22 @@ a{color:var(--accent)}
   </details>
 
   <details class="card">
+    <summary>Gasometria: fórmulas usadas</summary>
+    <dl class="kv">
+      <dt>Acidose metabólica</dt><dd>PaCO₂ esperada = 1,5 × HCO₃⁻ + 8, ± 2 (Winter)</dd>
+      <dt>Alcalose metabólica</dt><dd>PaCO₂ esperada = 40 + 0,7 × (HCO₃⁻ − 24), ± 5</dd>
+      <dt>Acidose respiratória</dt><dd>HCO₃⁻ sobe 1 (aguda) ou 4 (crônica) para cada 10 mmHg de PaCO₂ acima de 40, ± 2</dd>
+      <dt>Alcalose respiratória</dt><dd>HCO₃⁻ cai 2 (aguda) ou 4 (crônica) para cada 10 mmHg de PaCO₂ abaixo de 40, ± 2</dd>
+      <dt>Ânion gap</dt><dd>Na⁺ − (Cl⁻ + HCO₃⁻); referência 12 ± 4. Corrigido = AG + 2,5 × (4 − albumina)</dd>
+      <dt>Delta ratio</dt><dd>(AG corrigido − 12) ÷ (24 − HCO₃⁻). Menor que 0,8: acidose sem gap associada. De 0,8 a 2: gap isolado. Maior que 2: alcalose metabólica associada</dd>
+      <dt>PaO₂/FiO₂</dt><dd>Normal acima de 400</dd>
+      <dt>Gradiente A–a</dt><dd>FiO₂ × (760 − 47) − PaCO₂ ÷ 0,8 − PaO₂; esperado ≈ idade ÷ 4 + 4 em ar ambiente</dd>
+      <dt>Bicarbonato (déficit)</dt><dd>0,5 × peso × (24 − HCO₃⁻) mEq; estimativa teórica</dd>
+    </dl>
+    <p class="small muted" style="margin-top:8px">São regras empíricas, com margens de erro. Os valores de compensação variam um pouco entre as fontes.</p>
+  </details>
+
+  <details class="card">
     <summary>Depois do RCE</summary>
     <ul class="bullets">
       <li>Monitorar e evitar hipotensão e hipóxia.</li>
@@ -327,8 +398,95 @@ a{color:var(--accent)}
     <summary>Fonte e avisos</summary>
     <p>Algoritmo circular de PCR do adulto, American Heart Association, diretrizes 2025. <a href="https://cpr.heart.org/-/media/CPR-Files/CPR-Guidelines-Files/2025-Algorithms/Algorithm-ACLS-CA-Circular-250620.pdf?sc_lang=en" target="_blank" rel="noopener">Abrir o algoritmo oficial</a></p>
     <p class="small muted" style="margin-top:8px">Protótipo em validação. Todo conteúdo deve ser conferido por um médico contra a diretriz oficial e o protocolo local antes de qualquer uso clínico. Não substitui o julgamento clínico.</p>
-    <p class="small muted" style="margin-top:8px">Versão 0.2, 16/10/2026. Depois da primeira abertura com internet, o app funciona sem conexão. Os dados do atendimento ficam só neste aparelho.</p>
+    <p class="small muted" style="margin-top:8px">Versão 0.5, 16/10/2026. Depois da primeira abertura com internet, o app funciona sem conexão. Os dados do atendimento ficam só neste aparelho.</p>
   </details>
+</section>
+
+<!-- ===================== COMO USAR ===================== -->
+<section id="tab-ajuda" class="panel" aria-label="Como usar" hidden>
+  <div class="card">
+    <h2>Como usar o Guia PCR</h2>
+    <p class="muted" style="margin-top:8px">Em cerca de 1 minuto você entende o app. Ele organiza a parada: conta o tempo, lembra o que fazer e registra tudo. Quem decide a conduta é você.</p>
+  </div>
+
+  <div class="card">
+    <h3>1. Começar o atendimento</h3>
+    <ol class="steps">
+      <li>Na aba <b>Atendimento</b>, toque em <b>Iniciar PCR</b> assim que a RCP começar. O cronômetro geral passa a contar.</li>
+      <li>O painel <b>Agora</b> faz uma pergunta por vez. A primeira é: qual é o ritmo no monitor?</li>
+      <li>Escolha <b>FV / TV sem pulso</b>, <b>Assistolia / AESP</b> ou <b>Pulso presente (RCE)</b>.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>2. Durante o ciclo de 2 minutos</h3>
+    <ol class="steps">
+      <li>Ritmo chocável: o painel mostra <b>Choque</b>. Depois de aplicar, toque em <b>Choque dado</b>. O ciclo de 2 minutos começa.</li>
+      <li>Ritmo não chocável: o ciclo começa direto e a adrenalina aparece como pendência.</li>
+      <li>Cada ciclo de 2 minutos é numerado (Ciclo 1, Ciclo 2…) e aparece no cronômetro e no registro.</li>
+      <li>Ao fim do ciclo o celular avisa e o painel pede a checagem de pulso e ritmo, com um contador de 10 segundos. Se passar disso, o app avisa para retomar as compressões. É também a hora de trocar o compressor.</li>
+      <li>Tocou errado? Use <b>Desfazer</b>, que volta uma ação por vez.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>3. Drogas e ações</h3>
+    <ol class="steps">
+      <li>Ao dar uma droga ou realizar uma ação, toque no botão correspondente. O app registra o horário.</li>
+      <li>O botão da <b>adrenalina</b> conta a janela de 3 a 5 minutos: <span class="chip ok">no prazo</span> <span class="chip due">dar agora</span> <span class="chip late">atrasada</span></li>
+      <li><b>Amiodarona ou lidocaína:</b> escolha a droga antes da primeira dose. Na lidocaína, informe o peso para ver a dose em mg.</li>
+      <li><b>Acesso IV/IO</b> e <b>Via aérea avançada:</b> toque quando estiverem prontos. Isso muda as sugestões do painel.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>4. Metrônomo, alertas e causas</h3>
+    <ol class="steps">
+      <li><b>Metrônomo 110/min</b> marca o ritmo das compressões.</li>
+      <li>O app avisa com som no fim de cada ciclo e quando a adrenalina entra na janela. No iPhone, o som respeita a chave de silencioso e não há vibração.</li>
+      <li>Em <b>Causas reversíveis (Hs e Ts)</b>, marque o que já foi avaliado.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>5. Retorno da circulação e fim</h3>
+    <ol class="steps">
+      <li>Com pulso, toque em <b>Pulso presente (RCE)</b>. O app mostra os cuidados pós-PCR. Se parar de novo, toque em <b>Voltou a parar</b>.</li>
+      <li>Para terminar, toque em <b>Encerrar</b> e confirme com um segundo toque.</li>
+      <li><b>Copiar registro</b> leva o horário de cada conduta para o prontuário. Só depois use <b>Novo atendimento</b>, que apaga tudo deste aparelho.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>Gasometria arterial</h3>
+    <ol class="steps">
+      <li>Na aba <b>Gasometria</b>, digite pH, PaCO₂ e HCO₃⁻. Os demais campos são opcionais.</li>
+      <li>Com Na⁺ e Cl⁻ (e a albumina), o app calcula o ânion gap e a delta ratio. Com PaO₂ e FiO₂, avalia a oxigenação.</li>
+      <li>A interpretação aparece na hora: distúrbio primário, compensação, distúrbio associado e orientações gerais de conduta.</li>
+      <li>Nada é salvo. O botão <b>Carregar exemplo</b> mostra como funciona.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>Treinar e consultar</h3>
+    <ol class="steps">
+      <li>Aba <b>Treino:</b> casos simulados, uma decisão por vez, com explicação.</li>
+      <li>Aba <b>Referência:</b> algoritmo, doses, energia do choque e Hs e Ts.</li>
+      <li>Para praticar a tela de atendimento sem paciente, toque em <b>Iniciar PCR</b> e simule. No fim, <b>Encerrar</b> e <b>Novo atendimento</b>.</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>Instalar no celular</h3>
+    <ol class="steps">
+      <li><b>iPhone:</b> abra o endereço do app no Safari, toque em Compartilhar e depois em <b>Adicionar à Tela de Início</b>.</li>
+      <li><b>Android:</b> abra no Chrome, toque nos três pontos e em <b>Instalar app</b> (ou Adicionar à tela inicial).</li>
+      <li>Abra uma vez com internet. Depois disso o app funciona sem conexão, e os dados do atendimento ficam só no aparelho.</li>
+    </ol>
+  </div>
+
+  <div class="card small muted">Apoio à decisão em validação. Não substitui o julgamento clínico, o protocolo da instituição nem a diretriz oficial.</div>
+  <button class="btn primary" data-act="help-back">Voltar ao atendimento</button>
 </section>
 </main>
 </div>
@@ -358,7 +516,7 @@ var HTS=[
 ];
 
 /* ---------- estado ---------- */
-function fresh(){return {status:'idle',startedAt:0,endedAt:0,phase:'rhythm',cycleStart:0,cycleNo:0,lastRhythm:null,shocks:0,epiCount:0,lastEpi:0,epiAlerted:-1,cycleAlerted:false,antCount:0,antDrug:'amio',access:false,airway:false,weight:0,hts:{},log:[]}}
+function fresh(){return {status:'idle',startedAt:0,endedAt:0,phase:'rhythm',cycleStart:0,cycleNo:0,checkStart:0,checkAlerted:false,lastRhythm:null,shocks:0,epiCount:0,lastEpi:0,epiAlerted:-1,cycleAlerted:false,antCount:0,antDrug:'amio',access:false,airway:false,weight:0,hts:{},log:[]}}
 var S=fresh(), hist=[], sound=true, metro=null, ac=null, wake=null;
 
 function save(){try{localStorage.setItem(KEY,JSON.stringify({S:S,hist:hist.slice(-20)}))}catch(e){}}
@@ -369,10 +527,20 @@ function load(){
     if(d&&d.S&&d.S.status!=='idle'&&Date.now()-d.S.startedAt<8*3600*1000){S=d.S;hist=d.hist||[]}
   }catch(e){}
 }
+var HELP_KEY='guia-pcr-ajuda-vista';
+function helpSeen(){try{return localStorage.getItem(HELP_KEY)==='1'}catch(e){return false}}
+function markHelp(){try{localStorage.setItem(HELP_KEY,'1')}catch(e){}}
 function addLog(text){S.log.push({t:Date.now(),text:text})}
 function snap(){hist.push(JSON.stringify(S));if(hist.length>40)hist.shift()}
 function act(fn){snap();fn();save();render()}
-function startCycle(){S.cycleNo++;S.cycleStart=Date.now();S.cycleAlerted=false}
+function startCycle(){S.cycleNo++;S.cycleStart=Date.now();S.cycleAlerted=false;addLog('Ciclo '+S.cycleNo+' de RCP iniciado (2 min)')}
+function startCheck(){S.checkStart=Date.now();S.checkAlerted=false}
+function endCheck(){
+  if(!S.checkStart)return;
+  var s=Math.round((Date.now()-S.checkStart)/1000);
+  addLog('Checagem de pulso e ritmo: '+s+' s'+(s>10?' (acima de 10 s)':''));
+  S.checkStart=0;
+}
 
 /* ---------- som, vibração, tela acesa ---------- */
 function audio(){try{if(!ac){var C=window.AudioContext||window.webkitAudioContext;ac=new C()}if(ac.state==='suspended')ac.resume()}catch(e){}return ac}
@@ -418,8 +586,9 @@ function startPCR(){
 }
 function rhythm(kind){
   act(function(){
+    endCheck();
     if(kind==='shock'){S.lastRhythm='shock';S.phase='shock';addLog('Ritmo: FV/TV sem pulso (chocável)')}
-    else if(kind==='nonshock'){S.lastRhythm='nonshock';S.phase='cpr';startCycle();addLog('Ritmo: assistolia/AESP (não chocável)')}
+    else if(kind==='nonshock'){S.lastRhythm='nonshock';S.phase='cpr';addLog('Ritmo: assistolia/AESP (não chocável)');startCycle()}
     else{S.phase='rosc';addLog('RCE: retorno da circulação espontânea')}
   });
 }
@@ -437,7 +606,7 @@ function newCase(){S=fresh();hist=[];save();render()}
 function logText(){
   var head='Registro de PCR, '+new Date(S.startedAt).toLocaleDateString('pt-BR')+'\n';
   var lines=S.log.map(function(l){return '['+fmt((l.t-S.startedAt)/1000)+'] '+clock(l.t)+'  '+l.text});
-  return head+lines.join('\n')+'\nChoques: '+S.shocks+' | Adrenalina: '+S.epiCount+' | Antiarrítmico: '+S.antCount;
+  return head+lines.join('\n')+'\nCiclos de RCP: '+S.cycleNo+' | Choques: '+S.shocks+' | Adrenalina: '+S.epiCount+' | Antiarrítmico: '+S.antCount;
 }
 function copyLog(btn){
   var text=logText(), area=$('#copyArea');
@@ -470,11 +639,11 @@ function nowHTML(){
   var e=epiInfo(),a=antInfo();
   if(S.status==='ended'){
     var tot=fmt((S.endedAt-S.startedAt)/1000);
-    return '<span class="tag">Encerrado</span><h2>Atendimento encerrado</h2><p>Duração '+tot+'. Choques: '+S.shocks+'. Adrenalina: '+S.epiCount+'. Antiarrítmico: '+S.antCount+'. Copie o registro antes de iniciar outro.</p><div class="stack"><button class="btn primary" data-act="copy2">Copiar registro</button><button class="btn ghost" data-act="new">Novo atendimento</button></div>';
+    return '<span class="tag">Encerrado</span><h2>Atendimento encerrado</h2><p>Duração '+tot+'. Ciclos: '+S.cycleNo+'. Choques: '+S.shocks+'. Adrenalina: '+S.epiCount+'. Antiarrítmico: '+S.antCount+'. Copie o registro antes de iniciar outro.</p><div class="stack"><button class="btn primary" data-act="copy2">Copiar registro</button><button class="btn ghost" data-act="new">Novo atendimento</button></div>';
   }
   if(S.phase==='rhythm'){
     var first=S.cycleNo===0;
-    return '<span class="tag">Agora</span><h2>Checar o ritmo</h2><p>'+(first?'Mantenha as compressões enquanto o monitor/desfibrilador é conectado. ':'Ciclo de 2 minutos concluído. ')+'Pausa de no máximo 10 s. Troque o compressor.</p>'+
+    return '<span class="tag">Agora</span><h2>Checar pulso e ritmo</h2><p>'+(first?'Mantenha as compressões enquanto o monitor/desfibrilador é conectado. ':'Ciclo '+S.cycleNo+' concluído. ')+'A checagem dura no máximo 10 s (veja o contador). Troque o compressor.</p>'+
       '<div class="stack"><button class="btn shock" data-act="r-shock">FV / TV sem pulso<small>ritmo chocável</small></button>'+
       '<button class="btn primary" data-act="r-non">Assistolia / AESP<small>ritmo não chocável</small></button>'+
       '<button class="btn" data-act="r-rosc">Pulso presente (RCE)<small>retorno da circulação espontânea</small></button></div>';
@@ -494,16 +663,17 @@ function nowHTML(){
   if(!S.airway)items.push('<li>Considerar via aérea avançada, sem pausar as compressões</li>');
   else items.push('<li>Capnografia contínua: se o ETCO₂ estiver baixo ou caindo, revisar a qualidade da RCP</li>');
   items.push('<li>Procurar causas reversíveis (Hs e Ts)</li>');
-  return '<span class="tag">Agora</span><h2>RCP contínua</h2><ul class="todo">'+items.join('')+'</ul><div class="stack"><button class="btn ghost" data-act="rhythm-now">Checar o ritmo agora</button></div>';
+  return '<span class="tag">Agora</span><h2>RCP contínua · ciclo '+S.cycleNo+'</h2><ul class="todo">'+items.join('')+'</ul><div class="stack"><button class="btn ghost" data-act="rhythm-now">Checar o ritmo agora</button></div>';
 }
 
 function render(){
   var idle=S.status==='idle';
   $('#idle').hidden=!idle; $('#run').hidden=idle;
+  $('#helpBanner').hidden=helpSeen();
   if(idle)return;
   var ended=S.status==='ended';
   var now=$('#now'); now.dataset.phase=ended?'cpr':S.phase; now.innerHTML=nowHTML();
-  $('#counts').innerHTML='Choques <b>'+S.shocks+'</b> · Adrenalina <b>'+S.epiCount+'</b> · Antiarrítmico <b>'+S.antCount+'</b>';
+  $('#counts').innerHTML='Ciclo <b>'+S.cycleNo+'</b> · Choques <b>'+S.shocks+'</b> · Adrenalina <b>'+S.epiCount+'</b> · Antiarrítmico <b>'+S.antCount+'</b>';
   $('#btnAcc').className='med'+(S.access?' done':''); $('#accSub').textContent=S.access?'Realizado':'Pendente';
   $('#btnAir').className='med'+(S.airway?' done':''); $('#airSub').textContent=S.airway?'Realizada':'Pendente';
   var lido=S.antDrug==='lido';
@@ -526,11 +696,19 @@ function updateDynamic(){
   var lbl=$('#cycleLbl'),val=$('#cycleVal'),fill=$('#cycleFill');
   if(S.phase==='cpr'&&!ended){
     var el=(now-S.cycleStart)/1000, rem=CYCLE-el;
-    lbl.textContent='RCP · checar o ritmo em'; val.textContent=fmt(rem);
+    lbl.textContent='Ciclo '+S.cycleNo+' · checar o ritmo em'; val.textContent=fmt(rem); val.className='val';
     fill.style.width=Math.min(100,el/CYCLE*100)+'%'; fill.className=rem<=15?'end':'';
   }else{
-    lbl.textContent=ended?'Atendimento encerrado':(S.phase==='shock'?'Aplicar o choque':(S.phase==='rosc'?'RCE':'Checar o ritmo'));
-    val.textContent=S.phase==='rhythm'&&!ended?'02:00':'—:—'; fill.style.width='0'; fill.className='';
+    val.className='val';
+    if(S.phase==='rhythm'&&!ended&&S.checkStart){
+      var ce=(now-S.checkStart)/1000, cr=10-ce, over=cr<0;
+      lbl.textContent='Ciclo '+S.cycleNo+' completo · checar pulso e ritmo (máx. 10 s)';
+      val.textContent=over?'+'+fmt(-cr):fmt(cr); if(over)val.className='val over';
+      fill.style.width=Math.min(100,ce/10*100)+'%'; fill.className=over?'end':'';
+    }else{
+      lbl.textContent=ended?'Atendimento encerrado':(S.phase==='shock'?'Aplicar o choque':(S.phase==='rosc'?'RCE':(S.cycleNo>0?'Checar pulso e ritmo':'Ciclo 1 começa após definir o ritmo')));
+      val.textContent=S.phase==='rhythm'&&!ended?'02:00':'—:—'; fill.style.width='0'; fill.className='';
+    }
   }
   var e=epiInfo(), a=antInfo();
   $('#epiVal').textContent=S.lastEpi?fmt((now-S.lastEpi)/1000):'—';
@@ -547,7 +725,10 @@ setInterval(function(){
   if(S.status!=='running'){updateDynamic();return}
   var now=Date.now(),changed=false;
   if(S.phase==='cpr'&&(now-S.cycleStart)/1000>=CYCLE){
-    S.phase='rhythm';addLog('Ciclo de 2 min completo: checar o ritmo');alertTone(3);changed=true;
+    S.phase='rhythm';startCheck();addLog('Ciclo '+S.cycleNo+' completo: checar pulso e ritmo (até 10 s)');alertTone(3);changed=true;
+  }
+  if(S.phase==='rhythm'&&S.checkStart&&!S.checkAlerted&&(now-S.checkStart)/1000>10){
+    S.checkAlerted=true;addLog('Checagem passou de 10 s: retomar as compressões');alertTone(1);changed=true;
   }
   var e=epiInfo();
   if(S.lastEpi&&S.phase!=='rosc'&&e.state==='due'&&S.epiAlerted!==S.epiCount){S.epiAlerted=S.epiCount;alertTone(2);changed=true}
@@ -560,13 +741,16 @@ document.addEventListener('click',function(ev){
   if(tab){showTab(tab.dataset.tab);return}
   var el=ev.target.closest('[data-act]'); if(!el||el.disabled)return;
   switch(el.dataset.act){
+    case 'help':markHelp();render();showTab('ajuda');break;
+    case 'help-back':showTab('atend');break;
+    case 'help-dismiss':markHelp();render();break;
     case 'start':startPCR();break;
     case 'r-shock':rhythm('shock');break;
     case 'r-non':rhythm('nonshock');break;
     case 'r-rosc':rhythm('rosc');break;
     case 'shock-done':giveShock();break;
-    case 'rhythm-now':act(function(){S.phase='rhythm';addLog('Checagem de ritmo antecipada')});break;
-    case 'rearrest':act(function(){S.phase='rhythm';S.lastRhythm=null;addLog('Nova PCR após RCE')});break;
+    case 'rhythm-now':act(function(){S.phase='rhythm';startCheck();addLog('Checagem de pulso e ritmo antecipada (ciclo '+S.cycleNo+')')});break;
+    case 'rearrest':act(function(){S.phase='rhythm';S.lastRhythm=null;startCheck();addLog('Nova PCR após RCE')});break;
     case 'epi':giveEpi();break;
     case 'ant':giveAnt();break;
     case 'access':toggle('access','Acesso IV/IO');break;
@@ -589,9 +773,9 @@ document.addEventListener('change',function(ev){
 $('#peso').addEventListener('input',function(ev){S.weight=parseFloat(ev.target.value.replace(',','.'))||0;save();updateDynamic()});
 
 function showTab(name){
-  ['atend','treino','ref'].forEach(function(n){
+  ['atend','gas','treino','ref','ajuda'].forEach(function(n){
     $('#tab-'+n).hidden=n!==name;
-    $('#tabbtn-'+n).setAttribute('aria-selected',String(n===name));
+    var b=$('#tabbtn-'+n); if(b)b.setAttribute('aria-selected',String(n===name));
   });
   window.scrollTo(0,0);
 }
@@ -745,6 +929,250 @@ root.addEventListener('click',function(ev){
   render(); if(a!=='t-opt')window.scrollTo(0,0);
 });
 render();
+})();
+</script>
+<script>
+(function(){
+'use strict';
+function esc(t){return String(t).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function f0(x){return String(Math.round(x))}
+function f1(x){return (Math.round(x*10)/10).toFixed(1).replace('.',',')}
+function f2(x){return x.toFixed(2).replace('.',',')}
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1)}
+
+/* ================== MOTOR DE INTERPRETAÇÃO ==================
+   Regras usadas (margens empíricas, conferir com a sua referência):
+   - Winter (acidose metabólica): PaCO2 = 1,5 x HCO3 + 8, +-2
+   - Alcalose metabólica: PaCO2 = 40 + 0,7 x (HCO3 - 24), +-5
+   - Acidose respiratória: HCO3 sobe 1 (aguda) ou 4 (crônica) por 10 mmHg de PaCO2 acima de 40, +-2
+   - Alcalose respiratória: HCO3 cai 2 (aguda) ou 4 (crônica) por 10 mmHg de PaCO2 abaixo de 40, +-2
+   - Ânion gap = Na - (Cl + HCO3); corrigido = AG + 2,5 x (4 - albumina); elevado se > 12
+   - Delta ratio = (AG corrigido - 12) / (24 - HCO3): <0,8 mista, 0,8 a 2 gap puro, >2 alcalose metabólica associada */
+function interpretar(v){
+  var ph=v.ph,pco2=v.pco2,hco3=v.hco3;
+  var R={avisos:[],passos:[],dist:[],ag:null,agTipo:null,mistaGap:false,ratio:null,oxi:null,racidTempo:null,ralkTempo:null,resumo:'',phTxt:'',prim:null};
+  function add(c){if(R.dist.indexOf(c)<0)R.dist.push(c)}
+
+  var phc=6.1+Math.log(hco3/(0.03*pco2))/Math.LN10;
+  if(Math.abs(phc-ph)>0.05)R.avisos.push('pH, PaCO₂ e HCO₃⁻ não batem entre si (pelo cálculo, o pH seria '+f2(phc)+'). Confira a digitação e se a amostra é arterial.');
+
+  var acidemia=ph<7.35,alcalemia=ph>7.45;
+  R.phTxt=acidemia?'Acidemia':(alcalemia?'Alcalemia':'pH normal');
+  R.passos.push('pH '+f2(ph)+': '+(acidemia?'acidemia (abaixo de 7,35).':(alcalemia?'alcalemia (acima de 7,45).':'dentro da faixa normal (7,35 a 7,45).')));
+
+  var normalC=pco2>=35&&pco2<=45,normalB=hco3>=22&&hco3<=26,prim;
+  if(!acidemia&&!alcalemia&&normalC&&normalB)prim='none';
+  else if(ph<7.40){
+    var ra=pco2>45,ma=hco3<22;
+    if(ra&&ma)prim='mixAc';
+    else if(ra)prim='racid';
+    else if(ma)prim='macid';
+    else if(pco2>40||hco3<24)prim=((pco2-40)/10>=(24-hco3)/5)?'racid':'macid';
+    else prim='incons';
+  }else{
+    var rl=pco2<35,mb=hco3>26;
+    if(rl&&mb)prim='mixAl';
+    else if(rl)prim='ralk';
+    else if(mb)prim='malk';
+    else if(pco2<40||hco3>24)prim=((40-pco2)/10>=(hco3-24)/5)?'ralk':'malk';
+    else prim='incons';
+  }
+  R.prim=prim;
+
+  if(prim==='none')R.passos.push('PaCO₂ e HCO₃⁻ dentro dos limites: sem distúrbio ácido-base evidente.');
+  if(prim==='incons')R.avisos.push('Os valores não permitem identificar o distúrbio: o pH está alterado, mas PaCO₂ e HCO₃⁻ não explicam. Confira os dados.');
+  if(prim==='mixAc'){add('racid');add('macid');R.passos.push('Acidemia com PaCO₂ alta e HCO₃⁻ baixo: acidose respiratória e metabólica ao mesmo tempo. Nesse caso não há compensação a calcular.')}
+  if(prim==='mixAl'){add('ralk');add('malk');R.passos.push('Alcalemia com PaCO₂ baixa e HCO₃⁻ alto: alcalose respiratória e metabólica ao mesmo tempo. Nesse caso não há compensação a calcular.')}
+
+  if(prim==='macid'){
+    add('macid');
+    var e=1.5*hco3+8;
+    R.passos.push('Acidose metabólica primária (HCO₃⁻ baixo). Pela fórmula de Winter, a PaCO₂ esperada é '+f0(e-2)+' a '+f0(e+2)+' mmHg (1,5 × HCO₃⁻ + 8 ± 2). A medida é '+f0(pco2)+'.');
+    if(pco2>e+2){add('racid');R.passos.push('PaCO₂ acima do esperado: acidose respiratória associada (a ventilação não está compensando).')}
+    else if(pco2<e-2){add('ralk');R.passos.push('PaCO₂ abaixo do esperado: alcalose respiratória associada.')}
+    else R.passos.push('PaCO₂ dentro do esperado: compensação respiratória adequada.');
+  }
+  if(prim==='malk'){
+    add('malk');
+    var e2=40+0.7*(hco3-24);
+    R.passos.push('Alcalose metabólica primária (HCO₃⁻ alto). A PaCO₂ esperada é '+f0(e2-5)+' a '+f0(e2+5)+' mmHg (40 + 0,7 × [HCO₃⁻ − 24] ± 5). A medida é '+f0(pco2)+'.');
+    if(pco2>e2+5){add('racid');R.passos.push('PaCO₂ acima do esperado: acidose respiratória associada.')}
+    else if(pco2<e2-5){add('ralk');R.passos.push('PaCO₂ abaixo do esperado: alcalose respiratória associada.')}
+    else R.passos.push('PaCO₂ dentro do esperado: compensação respiratória adequada.');
+  }
+  if(prim==='racid'){
+    add('racid');
+    var ac=24+0.1*(pco2-40),ch=24+0.4*(pco2-40);
+    R.passos.push('Acidose respiratória primária (PaCO₂ alta). O HCO₃⁻ esperado é cerca de '+f0(ac)+' se for aguda (sobe 1 a cada 10 mmHg) e '+f0(ch)+' se for crônica (sobe 4 a cada 10 mmHg), com margem de ± 2. O medido é '+f0(hco3)+'.');
+    if(hco3<ac-2){add('macid');R.passos.push('HCO₃⁻ abaixo do esperado até para a fase aguda: acidose metabólica associada.')}
+    else if(hco3<=ac+2){R.racidTempo='aguda';R.passos.push('Compatível com acidose respiratória aguda, ainda sem compensação renal.')}
+    else if(hco3<ch-2){R.racidTempo='parcial';R.passos.push('HCO₃⁻ entre o esperado para aguda e crônica: compensação em curso ou doença crônica agudizada.')}
+    else if(hco3<=ch+2){R.racidTempo='crônica';R.passos.push('Compatível com acidose respiratória crônica, com compensação renal (ou crônica agudizada).')}
+    else{add('malk');R.passos.push('HCO₃⁻ acima do esperado até para a fase crônica: alcalose metabólica associada.')}
+  }
+  if(prim==='ralk'){
+    add('ralk');
+    var ac2=24-0.2*(40-pco2),ch2=24-0.4*(40-pco2);
+    R.passos.push('Alcalose respiratória primária (PaCO₂ baixa). O HCO₃⁻ esperado é cerca de '+f0(ac2)+' se for aguda (cai 2 a cada 10 mmHg) e '+f0(ch2)+' se for crônica (cai 4 a cada 10 mmHg), com margem de ± 2. O medido é '+f0(hco3)+'.');
+    if(hco3>ac2+2){add('malk');R.passos.push('HCO₃⁻ acima do esperado até para a fase aguda: alcalose metabólica associada.')}
+    else if(hco3>=ac2-2){R.ralkTempo='aguda';R.passos.push('Compatível com alcalose respiratória aguda.')}
+    else if(hco3>ch2+2){R.ralkTempo='parcial';R.passos.push('HCO₃⁻ entre o esperado para aguda e crônica: compensação em curso ou quadro crônico agudizado.')}
+    else if(hco3>=ch2-2){R.ralkTempo='crônica';R.passos.push('Compatível com alcalose respiratória crônica, com compensação renal.')}
+    else{add('macid');R.passos.push('HCO₃⁻ abaixo do esperado até para a fase crônica: acidose metabólica associada.')}
+  }
+
+  /* ânion gap e delta ratio */
+  if(isFinite(v.na)&&isFinite(v.cl)){
+    var ag=v.na-v.cl-hco3,agc=ag,temAlb=isFinite(v.alb);
+    if(temAlb)agc=ag+2.5*(4-v.alb);
+    R.ag={ag:ag,agc:agc,alb:temAlb};
+    R.passos.push('Ânion gap = Na⁺ − (Cl⁻ + HCO₃⁻) = '+f1(ag)+' mEq/L'+(temAlb?'; corrigido pela albumina: '+f1(agc):'')+'. Referência 12 ± 4, com variação entre laboratórios.'+(temAlb?'':' Sem a albumina, o gap pode estar subestimado se ela estiver baixa.'));
+    if(agc>12){
+      add('macid');R.agTipo='alto';
+      var dB=24-hco3,dA=agc-12;
+      if(dB>0){
+        var ratio=dA/dB;R.ratio=ratio;
+        if(ratio<0.8){R.mistaGap=true;R.passos.push('Delta ratio (ΔAG ÷ ΔHCO₃⁻) = '+f1(ratio)+': menor que 0,8, indica acidose sem ânion gap associada (acidose mista).')}
+        else if(ratio<=2)R.passos.push('Delta ratio (ΔAG ÷ ΔHCO₃⁻) = '+f1(ratio)+': entre 0,8 e 2, acidose de ânion gap elevado isolada.');
+        else{add('malk');R.passos.push('Delta ratio (ΔAG ÷ ΔHCO₃⁻) = '+f1(ratio)+': maior que 2, indica alcalose metabólica associada (ou HCO₃⁻ previamente alto).')}
+      }else{
+        add('malk');R.passos.push('Ânion gap elevado com HCO₃⁻ normal ou alto: acidose de gap escondida por uma alcalose metabólica associada.');
+      }
+    }else if(R.dist.indexOf('macid')>=0){
+      R.agTipo='normal';R.passos.push('Ânion gap normal: acidose metabólica hiperclorêmica (sem gap).');
+    }
+  }else if(R.dist.indexOf('macid')>=0){
+    R.passos.push('Informe Na⁺ e Cl⁻ para calcular o ânion gap e classificar a acidose metabólica.');
+  }
+
+  if(isFinite(v.lac))R.passos.push('Lactato '+f1(v.lac)+' mmol/L: '+(v.lac>=4?'elevação importante; avaliar perfusão, sepse e outras causas.':(v.lac>2?'elevado (acima de 2).':'normal (até 2).')));
+
+  /* oxigenação */
+  if(isFinite(v.po2)){
+    var fio=isFinite(v.fio2)?v.fio2:21;if(fio<=1)fio=fio*100;
+    var F=fio/100,pf=v.po2/F,pao2=F*(760-47)-pco2/0.8,aa=pao2-v.po2;
+    var faixa=pf>=400?'sem alteração':(pf>=300?'discretamente reduzida':(pf>=200?'reduzida (faixa leve da SDRA, se houver critérios)':(pf>=100?'moderadamente reduzida':'gravemente reduzida')));
+    R.oxi={po2:v.po2,fio:fio,pf:pf,aa:aa,aaEsp:isFinite(v.idade)?v.idade/4+4:null,faixa:faixa,arAmb:fio<=21.5};
+  }
+
+  var nomes=R.dist.map(function(c){return nome(R,c)});
+  if(prim==='none'&&!nomes.length)R.resumo='Sem distúrbio ácido-base';
+  else if(prim==='incons'&&!nomes.length)R.resumo='Valores inconsistentes';
+  else R.resumo=(nomes.length>1?'Distúrbio misto: ':'')+cap(nomes.join(' + '));
+  if(prim==='none'&&nomes.length)R.resumo=(nomes.length>1?'Distúrbio misto: ':'')+cap(nomes.join(' + '));
+  return R;
+}
+
+function nome(R,c){
+  if(c==='macid')return R.agTipo==='alto'?(R.mistaGap?'acidose metabólica mista (gap elevado e hiperclorêmica)':'acidose metabólica com ânion gap elevado'):(R.agTipo==='normal'?'acidose metabólica hiperclorêmica (sem gap)':'acidose metabólica');
+  if(c==='malk')return 'alcalose metabólica';
+  if(c==='racid')return R.racidTempo==='aguda'?'acidose respiratória aguda':(R.racidTempo==='crônica'?'acidose respiratória crônica':(R.racidTempo==='parcial'?'acidose respiratória (aguda sobre crônica)':'acidose respiratória'));
+  if(c==='ralk')return R.ralkTempo==='aguda'?'alcalose respiratória aguda':(R.ralkTempo==='crônica'?'alcalose respiratória crônica':(R.ralkTempo==='parcial'?'alcalose respiratória (aguda sobre crônica)':'alcalose respiratória'));
+  return c;
+}
+
+/* ================== CONDUTAS POR DISTÚRBIO ================== */
+function conduta(R,v){
+  var C=[],has=function(c){return R.dist.indexOf(c)>=0};
+  if(has('macid')){
+    var it=['Tratar a causa de base e restabelecer perfusão e ventilação. A acidose metabólica é um sinal, não o diagnóstico.'];
+    if(R.agTipo==='alto'){
+      it.push('Ânion gap elevado: investigar lactato (choque, sepse, isquemia), cetoacidose (diabética, alcoólica, jejum), uremia e intoxicações (metanol, etilenoglicol, salicilato). Se a causa não estiver clara, pedir osmolaridade e calcular o gap osmolar.');
+      it.push('Cetoacidose diabética: hidratação e insulina, com potássio de pelo menos 3,3 mEq/L antes de iniciar a insulina. Bicarbonato só em acidemia muito grave, conforme o protocolo local.');
+      it.push('Acidose lática: tratar o choque e a fonte da infecção. Bicarbonato não é rotina.');
+    }else if(R.agTipo==='normal'){
+      it.push('Sem gap: pensar em perda de bicarbonato (diarreia, fístulas), acidose tubular renal, grande volume de soro fisiológico e acetazolamida. O potássio sérico e o ânion gap urinário ajudam a separar as causas.');
+      it.push('Se persistir, a reposição de bicarbonato (por exemplo por via oral) costuma ser apropriada, junto com o tratamento da causa. Em grandes volumes, preferir cristaloide balanceado ao soro fisiológico.');
+    }
+    if(v.ph<=7.20){
+      it.push('Bicarbonato de sódio: o benefício é incerto. No estudo BICAR-ICU (pH ≤ 7,20, HCO₃⁻ ≤ 20, PaCO₂ ≤ 45), só o subgrupo com lesão renal aguda grave (AKIN 2–3) teve menos mortalidade. Costuma ser considerado com choque ou irritabilidade miocárdica, hipercalemia grave e intoxicações específicas, conforme o protocolo.');
+      if(isFinite(v.peso)&&v.hco3<24){
+        var def=0.5*v.peso*(24-v.hco3);
+        it.push('Se o bicarbonato for indicado, o déficit teórico é ≈ '+f0(def)+' mEq (0,5 × peso × [24 − HCO₃⁻]). Na solução a 8,4% (1 mEq/mL), seriam cerca de '+f0(def)+' mL. Não é para repor tudo de uma vez: repõe-se parte, reavalia-se a gasometria e ajusta. Garanta ventilação adequada, porque o bicarbonato gera CO₂, e vigie potássio, cálcio, sódio e volume.');
+      }
+    }else{
+      it.push('Com pH acima de 7,20, o bicarbonato em geral não é indicado, exceto como reposição na acidose sem gap por perda de bicarbonato.');
+    }
+    C.push({t:'Acidose metabólica',i:it});
+  }
+  if(has('malk')){
+    C.push({t:'Alcalose metabólica',i:[
+      'Classificar pelo cloreto urinário. Abaixo de 20 mEq/L (responsiva a cloreto): vômitos, sonda nasogástrica, diuréticos. Acima de 20 mEq/L (resistente): excesso de mineralocorticoide, depleção grave de potássio, hipomagnesemia, álcalis exógenos.',
+      'Responsiva: repor volume com soro fisiológico e corrigir o potássio (KCl); suspender o diurético, se for a causa. Em edema (insuficiência cardíaca, cirrose), evitar volume com soro fisiológico.',
+      'Resistente: tratar a causa (por exemplo antagonista de aldosterona quando há excesso de mineralocorticoide) e corrigir potássio e magnésio.',
+      'pH acima de 7,55 ou sintomas (confusão, tetania, arritmia) pedem internação e monitorização.'
+    ]});
+  }
+  if(has('racid')){
+    var it2=['O objetivo é melhorar a ventilação alveolar e tratar a causa: broncoespasmo, edema pulmonar, depressão respiratória por opioide ou sedativo (naloxona se houver suspeita de opioide), fadiga muscular, obstrução de via aérea.',
+      'Broncodilatador se houver broncoespasmo. Ventilação não invasiva (CPAP ou BiPAP) em exacerbação de DPOC ou edema pulmonar, se o paciente colabora e protege a via aérea.',
+      'Considerar intubação se o pH ficar abaixo de 7,25 sem melhora, com rebaixamento do nível de consciência ou fadiga. Reavaliar a gasometria 20 a 30 minutos após mudar a ventilação.',
+      'Em DPOC, titular o oxigênio (alvo de saturação em torno de 88% a 92%).',
+      'Bicarbonato não trata a acidose respiratória.'];
+    if(R.racidTempo==='crônica'||R.racidTempo==='parcial')it2.push('Se a hipercapnia é crônica, o HCO₃⁻ alto é compensação: evite normalizar a PaCO₂ de uma vez.');
+    C.push({t:'Acidose respiratória',i:it2});
+  }
+  if(has('ralk')){
+    C.push({t:'Alcalose respiratória',i:[
+      'Tratar a causa: dor, ansiedade, hipoxemia, embolia pulmonar, sepse, pneumonia, asma, febre, gravidez, intoxicação por salicilato, doença do sistema nervoso central. Em ventilação mecânica, rever frequência e volume corrente.',
+      'Corrigir primeiro a hipoxemia, se houver. Evite reinalação em saco de papel, pelo risco de hipoxemia.',
+      'Se for aguda e intensa, atenção a hipocalcemia e hipocalemia (formigamento, tetania, arritmia).'
+    ]});
+  }
+  return C;
+}
+
+/* ================== TELA ================== */
+var IDS={ph:'g-ph',pco2:'g-pco2',hco3:'g-hco3',na:'g-na',cl:'g-cl',alb:'g-alb',lac:'g-lac',po2:'g-po2',fio2:'g-fio2',idade:'g-idade',peso:'g-peso'};
+function val(id){var el=document.getElementById(id);if(!el)return NaN;var s=String(el.value).trim().replace(',','.');return s===''?NaN:parseFloat(s)}
+function lerCampos(){var v={};for(var k in IDS)v[k]=val(IDS[k]);return v}
+
+function ui(){
+  var out=document.getElementById('abgOut');if(!out)return;
+  var v=lerCampos();
+  if(!isFinite(v.ph)||!isFinite(v.pco2)||!isFinite(v.hco3)){
+    out.innerHTML='<div class="card muted">Informe pH, PaCO₂ e HCO₃⁻ para ver a interpretação.</div>';return;
+  }
+  if(v.ph<6.5||v.ph>8||v.pco2<5||v.pco2>200||v.hco3<2||v.hco3>60){
+    out.innerHTML='<div class="warnbox">Valor fora do esperado. Confira se o pH (6,5 a 8,0), a PaCO₂ (5 a 200 mmHg) e o HCO₃⁻ (2 a 60 mEq/L) foram digitados corretamente.</div>';return;
+  }
+  var R=interpretar(v),h='';
+  R.avisos.forEach(function(a){h+='<div class="warnbox">'+esc(a)+'</div>'});
+  h+='<div class="card"><span class="tag">Interpretação</span><div class="reshead">'+esc(R.resumo)+'</div><div class="chips">'+
+     '<span class="chip n">pH '+f2(v.ph)+' · '+esc(R.phTxt)+'</span><span class="chip n">PaCO₂ '+f0(v.pco2)+'</span><span class="chip n">HCO₃⁻ '+f0(v.hco3)+'</span>'+
+     (R.ag?'<span class="chip '+(R.ag.agc>12?'late':'ok')+'">AG '+f1(R.ag.agc)+(R.ag.alb?' (corrigido)':'')+'</span>':'')+'</div></div>';
+  h+='<div class="card"><h3>Passo a passo</h3><ol class="steps">'+R.passos.map(function(p){return '<li>'+esc(p)+'</li>'}).join('')+'</ol></div>';
+  if(R.oxi){
+    var o=R.oxi,li=[];
+    li.push('PaO₂ '+f0(o.po2)+' mmHg com FiO₂ de '+f0(o.fio)+'%. Relação PaO₂/FiO₂ = '+f0(o.pf)+': '+o.faixa+' (normal acima de 400; as faixas de Berlim da SDRA exigem critérios e PEEP ≥ 5).');
+    if(o.arAmb)li.push(o.po2<60?'Em ar ambiente, PaO₂ abaixo de 60 mmHg indica insuficiência respiratória hipoxêmica.':(o.po2<80?'Em ar ambiente, PaO₂ entre 60 e 79 mmHg indica hipoxemia leve.':'PaO₂ adequada em ar ambiente (o limite inferior cai com a idade).'));
+    li.push('Gradiente alvéolo-arterial (A–a) = '+f0(o.aa)+' mmHg'+(o.aaEsp!==null?'; esperado ≈ '+f0(o.aaEsp)+' mmHg para a idade, em ar ambiente':'')+'. '+(o.arAmb?'':'Com oxigênio suplementar o gradiente aumenta e a comparação perde precisão. ')+'Gradiente aumentado sugere problema de troca (V/Q, shunt, difusão); gradiente normal com hipoxemia sugere hipoventilação, FiO₂ baixa ou altitude. Calculado ao nível do mar (760 mmHg).');
+    h+='<div class="card"><h3>Oxigenação</h3><ul class="bullets small">'+li.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div>';
+  }
+  var C=conduta(R,v);
+  if(C.length){
+    h+='<div class="card small muted">Orientações gerais por distúrbio, não são prescrição. Na parada cardiorrespiratória a gasometria pode não refletir o paciente, e o bicarbonato não é de rotina (considerado em situações específicas, como hipercalemia grave ou intoxicação por bloqueador de canal de sódio). Conferir o protocolo da instituição.</div>';
+    C.forEach(function(c){h+='<div class="card cond"><h3>'+esc(c.t)+'</h3><ul>'+c.i.map(function(x){return '<li>'+esc(x)+'</li>'}).join('')+'</ul></div>'});
+    if(C.length>1)h+='<div class="card small muted">Em distúrbio misto, trate cada componente e reavalie a gasometria.</div>';
+  }
+  out.innerHTML=h;
+}
+
+function setExample(){
+  var ex={ph:'7,18',pco2:'22',hco3:'8',na:'138',cl:'100',alb:'4,0',lac:'9,0',po2:'110',fio2:'21',idade:'45',peso:'70'};
+  for(var k in ex){var el=document.getElementById(IDS[k]);if(el)el.value=ex[k]}
+  ui();
+}
+function clearAll(){for(var k in IDS){var el=document.getElementById(IDS[k]);if(el)el.value=''}ui()}
+
+document.addEventListener('input',function(ev){if(ev.target&&ev.target.id&&ev.target.id.indexOf('g-')===0)ui()});
+document.addEventListener('click',function(ev){
+  var el=ev.target.closest&&ev.target.closest('[data-act]');if(!el)return;
+  if(el.dataset.act==='abg-example')setExample();
+  else if(el.dataset.act==='abg-clear')clearAll();
+});
+window.__abg={interpretar:interpretar,conduta:conduta};
+ui();
 })();
 </script>
 <script>
