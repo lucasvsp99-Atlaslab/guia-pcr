@@ -1,5 +1,5 @@
 /* Guia PCR: cache para uso sem internet. Ao publicar uma nova versão, troque o número em CACHE. */
-const CACHE = 'guia-pcr-v0.5';
+const CACHE = 'guia-pcr-v0.8';
 const FILES = ['./', 'index.html', 'manifest.webmanifest',
   'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'icons/apple-touch-icon.png'];
 
